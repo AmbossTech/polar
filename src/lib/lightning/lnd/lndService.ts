@@ -139,22 +139,26 @@ export class LndService implements LightningService {
     amount: number,
     memo?: string,
     assetInfo?: {
+      assetId?: string;
       nodeId: string;
-      scid: string;
-      msats: string;
+      msats?: string;
     },
   ): Promise<string> {
     const req: LND.InvoicePartial = {
       value: amount.toString(),
       memo,
     };
-    // hop hints are used for creating TAP invoices
     if (assetInfo) {
-      // set the msats value instead of sats
-      req.value = undefined;
-      req.valueMsat = assetInfo.msats;
-      // add the hop hint for the asset channel
-      const hopHint = await this.createHopHint(node, assetInfo.nodeId, assetInfo.scid);
+      if (assetInfo.msats) {
+        // set the msats value instead of sats
+        req.value = undefined;
+        req.valueMsat = assetInfo.msats;
+      }
+      const hopHint = await this.createHopHint(
+        node,
+        assetInfo.nodeId,
+        assetInfo.assetId !== 'sats',
+      );
       req.routeHints = [{ hopHints: [hopHint] }];
     } else {
       // set the private flag to allow payments over private channels
@@ -267,7 +271,7 @@ export class LndService implements LightningService {
   private async createHopHint(
     node: LightningNode,
     nodeId: string,
-    chanId: string,
+    assetChannel: boolean,
   ): Promise<LND.HopHint> {
     // find the asset channel with the peer
     const { channels } = await proxy.listChannels(this.cast(node), {
@@ -275,7 +279,9 @@ export class LndService implements LightningService {
     });
     const channel = channels
       .map(c => ({ chanId: c.chanId, ...mapOpenChannel(c) }))
-      .find(c => !!c.assets);
+      .find(c => {
+        return assetChannel ? !!c.assets?.length : !c.assets?.length;
+      });
     if (!channel) {
       throw new Error(`No asset channel found with peer ${nodeId}`);
     }
@@ -293,7 +299,7 @@ export class LndService implements LightningService {
 
     return {
       nodeId,
-      chanId,
+      chanId: channel.chanId,
       feeBaseMsat: parseInt(policy.feeBaseMsat),
       feeProportionalMillionths: parseInt(policy.feeRateMilliMsat),
       cltvExpiryDelta: policy.timeLockDelta,

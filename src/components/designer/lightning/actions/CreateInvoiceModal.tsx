@@ -2,7 +2,16 @@ import React, { ReactNode, useCallback, useMemo } from 'react';
 import { useAsync, useAsyncCallback } from 'react-async-hook';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import styled from '@emotion/styled';
-import { Button, Form, InputNumber, message, Modal, Result, Select } from 'antd';
+import {
+  Button,
+  Form,
+  InputNumber,
+  message,
+  Modal,
+  Result,
+  Select,
+  Collapse,
+} from 'antd';
 import { usePrefixedTranslation } from 'hooks';
 import { LitdNode } from 'shared/types';
 import { LightningNodeChannelAsset } from 'lib/lightning/types';
@@ -32,6 +41,7 @@ interface FormValues {
   node: string;
   assetId: string;
   amount: number;
+  hopHint?: string;
 }
 
 interface Props {
@@ -83,8 +93,13 @@ const CreateInvoiceModal: React.FC<Props> = ({ network }) => {
       let invoice: string;
       let assetName = 'sats';
       if (assetId === 'sats') {
-        const amount = parseInt(`${values.amount}`);
-        invoice = await createInvoice({ node, amount, memo: '' });
+        const nodeId = values.hopHint;
+        invoice = await createInvoice({
+          node,
+          amount: parseInt(`${values.amount}`),
+          memo: '',
+          assetInfo: nodeId ? { assetId, nodeId } : undefined,
+        });
       } else {
         const litdNode = node as LitdNode;
         const amount = toAssetUnits({ assetId, amount: values.amount });
@@ -131,7 +146,12 @@ const CreateInvoiceModal: React.FC<Props> = ({ network }) => {
         layout="vertical"
         requiredMark={false}
         colon={false}
-        initialValues={{ node: nodeName, amount: 1_000_000, assetId: 'sats' }}
+        initialValues={{
+          node: nodeName,
+          amount: 1_000_000,
+          assetId: 'sats',
+          hopHint: '',
+        }}
         onFinish={createAsync.execute}
       >
         <LightningNodeSelect
@@ -179,6 +199,23 @@ const CreateInvoiceModal: React.FC<Props> = ({ network }) => {
             style={{ width: '100%' }}
           />
         </Form.Item>
+
+        <Collapse defaultActiveKey={[]} ghost>
+          <Collapse.Panel header={l('cmps.forms.advancedOptions')} key="advanced-options">
+            <Form.Item name="hopHint" label={l('hopHintLabel')}>
+              <Select disabled={createAsync.loading} allowClear>
+                {network.nodes.lightning
+                  .filter(n => n.name !== selectedNode && nodes[n.name]?.info?.pubkey)
+                  .map(n => ({ name: n.name, pubkey: nodes[n.name]?.info?.pubkey }))
+                  .map(({ name, pubkey }) => (
+                    <Select.Option key={name} value={pubkey}>
+                      {name} ({ellipseInner(pubkey || '', 6)})
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
+          </Collapse.Panel>
+        </Collapse>
       </Form>
     );
   } else {
