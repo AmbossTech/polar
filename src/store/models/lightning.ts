@@ -36,6 +36,7 @@ export interface CreateInvoicePayload {
   node: LightningNode;
   amount: number;
   memo?: string;
+  assetInfo?: { assetId: string; nodeId: string };
 }
 
 export interface PayInvoicePayload {
@@ -273,10 +274,12 @@ const lightningModel: LightningModel = {
       await actions.resetChannelsInfo(network);
     },
   ),
-  createInvoice: thunk(async (actions, { node, amount, memo }, { injections }) => {
-    const api = injections.lightningFactory.getService(node);
-    return await api.createInvoice(node, amount, memo);
-  }),
+  createInvoice: thunk(
+    async (actions, { node, amount, memo, assetInfo }, { injections }) => {
+      const api = injections.lightningFactory.getService(node);
+      return await api.createInvoice(node, amount, memo, assetInfo);
+    },
+  ),
   payInvoice: thunk(
     async (
       actions,
