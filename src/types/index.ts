@@ -234,6 +234,7 @@ export interface TapService {
     amount: number,
     memo: string,
     expiry: number,
+    metadata?: string,
   ) => Promise<string>;
   sendPayment: (
     node: TapNode,

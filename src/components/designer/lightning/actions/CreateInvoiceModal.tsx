@@ -5,6 +5,7 @@ import styled from '@emotion/styled';
 import {
   Button,
   Form,
+  Input,
   InputNumber,
   message,
   Modal,
@@ -42,6 +43,7 @@ interface FormValues {
   assetId: string;
   amount: number;
   hopHint?: string;
+  metadata?: string;
 }
 
 interface Props {
@@ -103,7 +105,12 @@ const CreateInvoiceModal: React.FC<Props> = ({ network }) => {
       } else {
         const litdNode = node as LitdNode;
         const amount = toAssetUnits({ assetId, amount: values.amount });
-        const res = await createAssetInvoice({ node: litdNode, assetId, amount });
+        const res = await createAssetInvoice({
+          node: litdNode,
+          assetId,
+          amount,
+          metadata: values.metadata,
+        });
         invoice = res.invoice;
         const asset = assets.find(a => a.id === assetId) as LightningNodeChannelAsset;
         assetName = `${asset.name} (${format(res.sats)} sats)`;
@@ -151,6 +158,7 @@ const CreateInvoiceModal: React.FC<Props> = ({ network }) => {
           amount: 1_000_000,
           assetId: 'sats',
           hopHint: '',
+          metadata: '',
         }}
         onFinish={createAsync.execute}
       >
@@ -214,6 +222,15 @@ const CreateInvoiceModal: React.FC<Props> = ({ network }) => {
                   ))}
               </Select>
             </Form.Item>
+            {isLitd && assetId !== 'sats' && (
+              <Form.Item name="metadata" label={l('metadataLabel')}>
+                <Input.TextArea
+                  disabled={createAsync.loading}
+                  placeholder={l('metadataPlaceholder')}
+                  rows={3}
+                />
+              </Form.Item>
+            )}
           </Collapse.Panel>
         </Collapse>
       </Form>
