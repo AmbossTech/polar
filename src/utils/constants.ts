@@ -429,7 +429,7 @@ export const defaultRepoState: DockerRepoState = {
         '0.14.0-alpha',
       ],
       compatibility: {
-        '0.16.0-alpha.rc1': '29.0',
+        '0.16.0-alpha.rc1': '30.0',
         '0.15.2-alpha': '29.0',
         '0.15.1-alpha': '29.0',
         '0.15.0-alpha': '29.0',
