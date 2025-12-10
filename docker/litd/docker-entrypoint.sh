@@ -17,7 +17,11 @@ fi
 if [ $(echo "$1" | cut -c1) = "-" ]; then
   echo "$0: assuming arguments for litd"
 
-  set -- litd "$@"
+  # Get the container's IP address
+  CONTAINER_IP=$(hostname -i)
+
+  # Add tlsextraip and tlsextradomain to the command
+  set -- litd --lnd-tlsextraip=$CONTAINER_IP --lnd-tlsextradomain=$(hostname) "$@"
 fi
 
 if [ "$1" = "litd" ] || [ "$1" = "litcli" ]; then
