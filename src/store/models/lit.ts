@@ -39,6 +39,7 @@ export interface PayInvoicePayload {
   assetId: string;
   invoice: string;
   allowSelfPayment?: boolean;
+  metadata?: string;
 }
 
 export interface LitModel {
@@ -143,7 +144,7 @@ const litModel: LitModel = {
   payAssetInvoice: thunk(
     async (
       _,
-      { node, assetId, invoice, allowSelfPayment },
+      { node, assetId, invoice, allowSelfPayment, metadata },
       { injections, getStoreState, getStoreActions },
     ) => {
       const assetsInChannels = getStoreState()
@@ -173,6 +174,7 @@ const litModel: LitModel = {
         feeLimit,
         peerPubkey,
         allowSelfPayment,
+        metadata,
       );
 
       // synchronize the chart with the new channel
