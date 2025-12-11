@@ -181,6 +181,7 @@ export interface LightningService {
     amount?: number,
     customRecords?: PLN.CustomRecords,
     advancedOptions?: PLN.SendPaymentRequestAdvancedOptions,
+    metadata?: string,
   ) => Promise<PLN.LightningNodePayReceipt>;
   decodeInvoice: (
     node: LightningNode,
@@ -243,6 +244,7 @@ export interface TapService {
     feeLimitMsat: number,
     peerPubkey?: string,
     allowSelfPayment?: boolean,
+    metadata?: string,
   ) => Promise<PLN.LightningNodePayReceipt>;
 }
 
